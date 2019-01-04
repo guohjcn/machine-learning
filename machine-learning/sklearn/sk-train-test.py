@@ -91,10 +91,10 @@ def svm_cross_validation(train_x, train_y):
     return model
 
 
-def read_data(data_file):
+def read_mnist_data(data_file):
     import gzip
     f = gzip.open(data_file, "rb")
-    # train, val, test = pickle.load()
+    #train, val, test = pickle.load(f)
     # encoding issue: http://www.mlblog.net/2016/09/reading-mnist-in-python3.html
     u = pickle._Unpickler(f)
     u.encoding = 'latin1'
@@ -106,12 +106,12 @@ def read_data(data_file):
     test_y = test[1]
     return train_x, train_y, test_x, test_y
 
-
-if __name__ == '__main__':
+def process_minist():
     #https://github.com/mnielsen/neural-networks-and-deep-learning/blob/master/data/mnist.pkl.gz
     #https://github.com/mnielsen/neural-networks-and-deep-learning/raw/master/data/mnist.pkl.gz
     #http://deeplearning.net/data/mnist/mnist.pkl.gz
-    data_file = "/tmp/mnist.pkl.gz"
+    #data_file = "/tmp/mnist.pkl.gz"
+    data_file = "C:\\temp\\mnist.pkl.gz"
     thresh = 0.5
     model_save_file = None
     model_save = {}
@@ -129,7 +129,7 @@ if __name__ == '__main__':
                    }
 
     print ('reading training and testing data...')
-    train_x, train_y, test_x, test_y = read_data(data_file)
+    train_x, train_y, test_x, test_y = read_mnist_data(data_file)
     num_train, num_feat = train_x.shape
     num_test, num_feat = test_x.shape
     is_binary_class = (len(np.unique(train_y)) == 2)
@@ -160,3 +160,8 @@ if __name__ == '__main__':
 
     if model_save_file != None:
         pickle.dump(model_save, open(model_save_file, 'wb'))
+
+
+
+if __name__ == '__main__':
+    process_minist()
