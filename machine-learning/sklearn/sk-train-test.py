@@ -3,12 +3,13 @@
 
 import sys
 import os
+print("Python version:", sys.version)
+
 import time
 from sklearn import metrics
 import numpy as np
 import pickle
 
-print("Python version:", sys.version)
 
 #reload(sys)
 #sys.setdefaultencoding('utf8')
@@ -115,7 +116,8 @@ if __name__ == '__main__':
     model_save_file = None
     model_save = {}
 
-    test_classifiers = ['NB', 'KNN', 'LR', 'RF', 'DT', 'SVM', 'GBDT']
+    #test_classifiers = ['NB', 'KNN', 'LR', 'RF', 'DT', 'SVM', 'GBDT']
+    test_classifiers = ['NB', 'LR', 'RF', 'DT', 'SVM', 'GBDT']
     classifiers = {'NB': naive_bayes_classifier,
                    'KNN': knn_classifier,
                    'LR': logistic_regression_classifier,
@@ -142,6 +144,9 @@ if __name__ == '__main__':
         print('training took %fs!' % (training_time - start_time))
 
         predict = model.predict(test_x)
+        predict_time = time.time()
+        print('predicting took %fs!' % (predict_time - training_time))
+
         if model_save_file != None:
             model_save[classifier] = model
         if is_binary_class:
@@ -150,8 +155,8 @@ if __name__ == '__main__':
             print ('precision: %.2f%%, recall: %.2f%%' % (100 * precision, 100 * recall))
         accuracy = metrics.accuracy_score(test_y, predict)
         print ('accuracy: %.2f%%' % (100 * accuracy))
-        predict_time = time.time()
-        print('predicting took %fs!' % (predict_time - training_time))
+        measurescore_time = time.time()
+        print('measure score took %fs!' % (measurescore_time - predict_time))
 
     if model_save_file != None:
         pickle.dump(model_save, open(model_save_file, 'wb'))
