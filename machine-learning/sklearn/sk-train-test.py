@@ -9,6 +9,7 @@ import time
 from sklearn import metrics
 import numpy as np
 import pickle
+import matplotlib.pyplot as plt 
 
 
 #reload(sys)
@@ -90,6 +91,26 @@ def svm_cross_validation(train_x, train_y):
     model.fit(train_x, train_y)
     return model
 
+def show_mnist_pic(X, Y):
+    rows = 10
+    cols = 10
+    fig, ax = plt.subplots(nrows=rows, ncols=cols, sharex=True, sharey=True, ) 
+    ax = ax.flatten() 
+    for nrow in range(rows):
+        for ncol in range(cols): 
+            img = X[Y ==  ncol][nrow*cols ].reshape(28, 28)
+            #img = X[nline*10 + ncol].reshape(28, 28)
+            ax[nrow*cols + ncol].imshow(img, cmap='Greys', interpolation='nearest')
+    ax[0].set_xticks([]) 
+    ax[0].set_yticks([]) 
+    plt.tight_layout() 
+    plt.show()
+
+
+def save_mnist_raw_file(X, Y, name):
+    np.savetxt(name+'_X.csv',X)
+    np.savetxt(name+'_Y.csv', Y)
+
 
 def read_mnist_data(data_file):
     import gzip
@@ -104,20 +125,24 @@ def read_mnist_data(data_file):
     train_y = train[1]
     test_x = test[0]
     test_y = test[1]
+
+    show_mnist_pic(train_x, train_y)
+    #save_mnist_raw_file(train_x, train_y,"train")
+
     return train_x, train_y, test_x, test_y
 
 def process_minist():
     #https://github.com/mnielsen/neural-networks-and-deep-learning/blob/master/data/mnist.pkl.gz
     #https://github.com/mnielsen/neural-networks-and-deep-learning/raw/master/data/mnist.pkl.gz
     #http://deeplearning.net/data/mnist/mnist.pkl.gz
-    #data_file = "/tmp/mnist.pkl.gz"
-    data_file = "C:\\temp\\mnist.pkl.gz"
+    data_file = "/var/tmp/mnist.pkl.gz"
+    #data_file = "C:\\temp\\mnist.pkl.gz"
     thresh = 0.5
     model_save_file = None
     model_save = {}
 
     #test_classifiers = ['NB', 'KNN', 'LR', 'RF', 'DT', 'SVM', 'GBDT']
-    test_classifiers = ['NB', 'LR', 'RF', 'DT', 'SVM', 'GBDT']
+    test_classifiers = ['NB', 'RF']
     classifiers = {'NB': naive_bayes_classifier,
                    'KNN': knn_classifier,
                    'LR': logistic_regression_classifier,
@@ -134,7 +159,11 @@ def process_minist():
     num_test, num_feat = test_x.shape
     is_binary_class = (len(np.unique(train_y)) == 2)
     print ('******************** Data Info *********************')
-    print ('#training data: %d, #testing_data: %d, dimension: %d' % (num_train, num_test, num_feat))
+    #print ('#training data: %d, #testing_data: %d, dimension: %d' % (num_train, num_test, num_feat))
+    print("Training X data shape : ", train_x.shape )
+    print("Training Y data shape : ", train_y.shape)
+    print("Testing X data shape : ", test_x.shape)
+    print("Testing Y data shape : ", test_y.shape)
 
     for classifier in test_classifiers:
         print ('******************* %s ********************' % classifier)
