@@ -15,9 +15,16 @@ import matplotlib.pyplot as plt
 #reload(sys)
 #sys.setdefaultencoding('utf8')
 
+#linear_regression
 def linear_regression(train_x, train_y):
     from sklearn.linear_model import LinearRegression
-    model = LinearRegression()
+    model = LinearRegression(normalize=True)
+    model.fit(train_x, train_y)
+    return model
+#BayesianRidge
+def bayesian_ridge_regression(train_x, train_y):
+    from sklearn.linear_model import BayesianRidge
+    model = BayesianRidge()
     model.fit(train_x, train_y)
     return model
 
@@ -93,7 +100,7 @@ def svm_cross_validation(train_x, train_y):
     model.fit(train_x, train_y)
     return model
 
-def show_pic(X, Y):
+def show_pictures(X, Y):
     rows = 10
     cols = 10
     fig, ax = plt.subplots(nrows=rows, ncols=cols, sharex=True, sharey=True, ) 
@@ -108,55 +115,57 @@ def show_pic(X, Y):
     plt.tight_layout() 
     plt.show()
 
+def show_scatters(actual, predict, title):
+    plt.scatter(actual,predict)
+    plt.title(title)
+    plt.show()
 
 def save_raw_file(X, Y, name):
     np.savetxt(name+'_X.csv',X)
     np.savetxt(name+'_Y.csv', Y)
 
 ## only support liner regression
-def train_only(train_x, train_y):
+def regression_train_and_test(train_x, train_y, test_x, test_y):
     model_save_file = None
     model_save = {}
 
     #test_classifiers = ['NB', 'KNN', 'LR', 'RF', 'DT', 'SVM', 'GBDT']
-    test_classifiers = ['LineR']
-    classifiers = {'NB': naive_bayes_classifier,
-                   'KNN': knn_classifier,
-                   'LR': logistic_regression_classifier,
-                   'RF': random_forest_classifier,
-                   'DT': decision_tree_classifier,
-                   'SVM': svm_classifier,
-                   'SVMCV': svm_cross_validation,
-                   'GBDT': gradient_boosting_classifier,
-                   'LineR': linear_regression
+    test_regressions = ['Line','BR']
+    regressions = {
+                    'BR':bayesian_ridge_regression,
+                   'Line': linear_regression
                    }
     
     print ('******************** Data Info *********************')
     print("Training X data shape : ", train_x.shape )
     print("Training Y data shape : ", train_y.shape)
 
-    for classifier in test_classifiers:
-        print ('******************* %s ********************' % classifier)
+    for regression in test_regressions:
+        print ('******************* %s ********************' % regressions[regression].__name__)
         start_time = time.time()
-        model = classifiers[classifier](train_x, train_y)
+        model = regressions[regression](train_x, train_y)
         training_time = time.time()
         print('training took %fs!' % (training_time - start_time))
 
-        predict = model.predict(train_x[:10,:])
+        #predict = model.predict(train_x[:10,:])
+        predict = model.predict(test_x)
         np.set_printoptions(formatter={'float':'{:0.1f}'.format})
-        print("[Try] Target:\t", train_y[:10])
-        print("[Try] Predict:\t", predict[:10])
+        #print("[Try] Target:\t", test_y[:10])
+        #print("[Try] Predict:\t", predict[:10])
+        print("[Try] Target:\t", test_y)
+        print("[Try] Predict:\t", predict)
+        show_scatters(test_y,predict,regressions[regression].__name__)
         
         predict_time = time.time()
         print('predicting took %fs!' % (predict_time - training_time))
 
         if model_save_file != None:
-            model_save[classifier] = model
+            model_save[regression] = model
 
     if model_save_file != None:
         pickle.dump(model_save, open(model_save_file, 'wb'))
 
-def train_and_test(train_x, train_y, test_x, test_y):
+def classifier_train_and_test(train_x, train_y, test_x, test_y):
     thresh = 0.5
     model_save_file = None
     model_save = {}
@@ -170,8 +179,7 @@ def train_and_test(train_x, train_y, test_x, test_y):
                    'DT': decision_tree_classifier,
                    'SVM': svm_classifier,
                    'SVMCV': svm_cross_validation,
-                   'GBDT': gradient_boosting_classifier,
-                   'LineR': linear_regression                   
+                   'GBDT': gradient_boosting_classifier                   
                    }
     
     is_binary_class = (len(np.unique(train_y)) == 2)
@@ -182,7 +190,7 @@ def train_and_test(train_x, train_y, test_x, test_y):
     print("Testing Y data shape : ", test_y.shape)
 
     for classifier in test_classifiers:
-        print ('******************* %s ********************' % classifier)
+        print ('******************* %s ********************' % classifiers[classifier].__name__)
         start_time = time.time()
         model = classifiers[classifier](train_x, train_y)
         training_time = time.time()
@@ -210,7 +218,7 @@ def train_and_test(train_x, train_y, test_x, test_y):
     if model_save_file != None:
         pickle.dump(model_save, open(model_save_file, 'wb'))
 
-def process_minist():
+def process_minist_classifier():
     print ('\n\n#### Data: mnist ####')
     #https://github.com/mnielsen/neural-networks-and-deep-learning/blob/master/data/mnist.pkl.gz
     #https://github.com/mnielsen/neural-networks-and-deep-learning/raw/master/data/mnist.pkl.gz
@@ -232,30 +240,63 @@ def process_minist():
     test_y = test[1]
     #show_pic(train_x, train_y)
     #save_raw_file(train_x, train_y,"train")
-    train_and_test(train_x, train_y, test_x, test_y )
+    classifier_train_and_test(train_x, train_y, test_x, test_y )
 
-def process_iris():
-    print ('\n\n#### Data: iris ####')
+def process_20newsgroup_classifier():
+    print ('\n\n#### Data: 20 news group  ####')
     from sklearn.model_selection import train_test_split
     from sklearn import datasets
-    iris = datasets.load_iris()
-    iris_x = iris.data
-    iris_y = iris.target
-    train_x, test_x, train_y, test_y = train_test_split(iris_x, iris_y, test_size=0.3)
-    train_and_test(train_x, train_y, test_x, test_y )
+    #https://ndownloader.figshare.com/files/5975967
+    rawdata = datasets.fetch_20newsgroups()
+    rawdata_x = rawdata.data
+    rawdata_y = rawdata.target
+    train_x, test_x, train_y, test_y = train_test_split(rawdata_x, rawdata_y, test_size=0.3)
+    classifier_train_and_test(train_x, train_y, test_x, test_y )
 
-def process_boston():
-    print ('\n\n#### Data: boston house price ####')
+def process_digits_classifier():
+    print ('\n\n#### Data: digits handwriting recognition  ####')
     from sklearn.model_selection import train_test_split
     from sklearn import datasets
-    boston = datasets.load_boston()
-    train_x = boston.data
-    train_y = boston.target
-    #train_x, test_x, train_y, test_y = train_test_split(train_x, train_y, test_size=0.3)
-    train_only(train_x, train_y)
+    rawdata = datasets.load_digits()
+    rawdata_x = rawdata.data
+    rawdata_y = rawdata.target
+    train_x, test_x, train_y, test_y = train_test_split(rawdata_x, rawdata_y, test_size=0.3)
+    classifier_train_and_test(train_x, train_y, test_x, test_y )
+
+def process_iris_classifier():
+    print ('\n\n#### Classifier Data: iris ####')
+    from sklearn.model_selection import train_test_split
+    from sklearn import datasets
+    rawdata = datasets.load_iris()
+    rawdata_x = rawdata.data
+    rawdata_y = rawdata.target
+    train_x, test_x, train_y, test_y = train_test_split(rawdata_x, rawdata_y, test_size=0.3)
+    classifier_train_and_test(train_x, train_y, test_x, test_y )
+
+def process_boston_regression():
+    print ('\n\n#### Regression Data: boston house price ####')
+    from sklearn.model_selection import train_test_split
+    from sklearn import datasets
+    rawdata = datasets.load_boston()    
+    raw_x = rawdata.data
+    raw_y = rawdata.target
+    train_x, test_x, train_y, test_y = train_test_split(raw_x, raw_y, test_size=0.3)
+    regression_train_and_test(train_x,  train_y,test_x, test_y )
     
+def process_diabetes_regression():
+    print ('\n\n#### Regression Data: diabetes ####')
+    from sklearn.model_selection import train_test_split
+    from sklearn import datasets
+    rawdata = datasets.load_diabetes()
+    raw_x = rawdata.data
+    raw_y = rawdata.target
+    train_x, test_x, train_y, test_y = train_test_split(raw_x, raw_y, test_size=0.3)
+    regression_train_and_test(train_x, train_y,test_x, test_y )
 
 if __name__ == '__main__':
     #process_minist()
-    process_iris()
-    process_boston()
+    #process_20newsgroup()
+    process_digits_classifier()
+    process_iris_classifier()
+    process_boston_regression()
+    process_diabetes_regression()
